@@ -20,7 +20,7 @@ const userSchema = new Schema(
       minlength: 8,
       trim: true,
     },
-    userAllContacts: [
+    userContacts: [
       {
         type: Schema.Types.ObjectId,
         ref: "Contact",

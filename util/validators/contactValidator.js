@@ -1,20 +1,20 @@
 // Event Validation
-const Joi = require("joi");
+const Joi = require('joi');
 
-module.exports.validateContactInput = async (name, email, phone,company) => {
-  const eventSchema = Joi.object().keys({
+module.exports.validateContactInput = async (name, email, phone, company) => {
+  const contactSchema = Joi.object().keys({
     name: Joi.string().min(3).required(),
-    email:Joi.string().email().min(5).max(20).required(),
+    email: Joi.string().email().min(5).max(40).required(),
     company: Joi.string().min(3).max(30),
-    phone:Joi.string().length(10).required()
+    phone: Joi.string().length(10).required(),
   });
   try {
-    const { error } = await eventSchema.validate(
+    const { error } = await contactSchema.validate(
       {
         name,
         email,
         company,
-        phone
+        phone,
       },
       { abortEarly: false }
     );
@@ -24,6 +24,38 @@ module.exports.validateContactInput = async (name, email, phone,company) => {
     return { isValid: true };
   } catch (err) {
     console.log(err);
-    return { message: "Something went wrong !" };
+    return { message: 'Something went wrong !' };
+  }
+};
+
+module.exports.validateContactUpdateInput = async (
+  name,
+  email,
+  phone,
+  company
+) => {
+  const contactSchema = Joi.object().keys({
+    name: Joi.string().min(3),
+    email: Joi.string().email().min(5).max(40),
+    company: Joi.string().min(3).max(30),
+    phone: Joi.string().length(10),
+  });
+  try {
+    const { error } = await contactSchema.validate(
+      {
+        name,
+        email,
+        company,
+        phone,
+      },
+      { abortEarly: false }
+    );
+    if (error) {
+      return { isValid: false, error };
+    }
+    return { isValid: true };
+  } catch (err) {
+    console.log(err);
+    return { message: 'Something went wrong !' };
   }
 };
