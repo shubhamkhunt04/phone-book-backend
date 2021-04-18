@@ -10,6 +10,7 @@ const { paginatedResult } = require('../middleware/pagination');
 
 const contactRouter = express.Router();
 
+// add contact
 contactRouter.post('/addcontact', verifyUser, async (req, res) => {
   const { name, email, phone, company } = req.body;
   const { isValid, error } = await validateContactInput(
@@ -47,6 +48,7 @@ contactRouter.post('/addcontact', verifyUser, async (req, res) => {
   }
 });
 
+// fetch all contacts
 contactRouter.get(
   '/contacts',
   verifyUser,
@@ -68,6 +70,7 @@ contactRouter.get(
   }
 );
 
+// fetch contactById
 contactRouter.get('/:contactId', verifyUser, async (req, res) => {
   try {
     const { id } = req.decoded;
@@ -91,7 +94,8 @@ contactRouter.get('/:contactId', verifyUser, async (req, res) => {
   }
 });
 
-contactRouter.put('/:contactId/updatecontact', verifyUser, async (req, res) => {
+// update contactById
+contactRouter.put('/:contactId', verifyUser, async (req, res) => {
   const { name, email, phone, company } = req.body;
   const { isValid, error } = await validateContactUpdateInput(
     name,
@@ -128,6 +132,28 @@ contactRouter.put('/:contactId/updatecontact', verifyUser, async (req, res) => {
     }
   } else {
     return res.json({ message: error.details.map((e) => e.message) });
+  }
+});
+
+// delete contactById
+contactRouter.delete('/:contactId', verifyUser, async (req, res) => {
+  try {
+    const { id } = req.decoded;
+    const contactId = req.params.contactId;
+    const user = await User.findById(id);
+
+    // Not allow to update other users contact
+    if (!user.userContacts.includes(contactId))
+      return res.json({ message: 'Not allowed to delete contact details' });
+
+    const contact = await Contact.findById(contactId);
+    if (!contact) return res.json({ message: 'Contact not found' });
+
+    const deletedContact = await Contact.findByIdAndRemove(contactId);
+    res.json({ message: 'Contact details deleted', payload: deletedContact });
+  } catch (error) {
+    console.log(error);
+    return res.json({ message: 'Something went wrong', err: error.message });
   }
 });
 

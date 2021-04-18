@@ -17,8 +17,7 @@ const contactSchema = new Schema(
     phone: {
       type: String,
       require: true,
-      unique: true,
-      trim: true,
+      trim: true, 
     },
     company: {
       type: String,

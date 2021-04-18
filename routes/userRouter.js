@@ -1,26 +1,29 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const User = require("../model/User");
-const { generateToken } = require("../util/generateToken");
-const { paginatedResult } = require("../middleware/pagination");
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const User = require('../model/User');
+const { generateToken } = require('../util/generateToken');
+const { paginatedResult } = require('../middleware/pagination');
 const {
   validateRegisterInput,
   validateLoginInput,
   validateUpdatePasswordInput,
-  validateResetPasswordInput,
-  validateChangePasswordInput,
-} = require("../util/validators/userValidator");
-const { verifyUser } = require("../middleware/verifyUser");
+} = require('../util/validators/userValidator');
+const { verifyUser } = require('../middleware/verifyUser');
 
 const userRouter = express.Router();
 
-userRouter.get("/users", paginatedResult(User), async (req, res) => {
-  const user = await User.find();
+userRouter.get('/', verifyUser, async (req, res) => {
+  try {
+    console.log('id',id)
+    const user = await User.findById(id);
 
-  res.json({ message: "All Users", payload: user });
+    res.json({ message: 'User details', payload: user });
+  } catch (err) {
+    res.json({ message: 'Something went wrong !!', err: error.message });
+  }
 });
 
-userRouter.post("/register", async (req, res) => {
+userRouter.post('/register', async (req, res) => {
   let { username, email, password } = req.body;
   const { isValid, error } = await validateRegisterInput(
     username,
@@ -40,50 +43,56 @@ userRouter.post("/register", async (req, res) => {
 
         return res.json({
           payload: { ...user._doc, token },
-          message: "User register successfully",
+          message: 'User register successfully',
         });
       }
 
-      return res.json({ message: "User Already Exist" });
+      return res.json({ message: 'User Already Exist' });
     } catch (error) {
-      return res.json({ message: "Something went wrong !" });
+      return res.json({
+        message: 'Something went wrong !',
+        err: error.message,
+      });
     }
   } else {
     return res.json({ message: error.details.map((e) => e.message) });
   }
 });
 
-userRouter.post("/login", async (req, res) => {
+userRouter.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log(email,password)
+  console.log(email, password);
   const { isValid, error } = await validateLoginInput(email, password);
 
   if (isValid) {
     try {
       const user = await User.findOne({ email });
       if (!user) {
-        return res.json({ message: "User not found" });
+        return res.json({ message: 'User not found' });
       }
 
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
-        return res.json({ message: "Email or password is wrong !" });
+        return res.json({ message: 'Email or password is wrong !' });
       }
       const token = generateToken(user);
 
       return res.json({
         payload: { ...user._doc, token },
-        message: "User login successfully",
+        message: 'User login successfully',
       });
     } catch (error) {
-      return res.json({ message: "Something went wrong !" });
+      return res.json({
+        message: 'Something went wrong !',
+        err: error.message,
+      });
     }
   } else {
     return res.json({ message: error.details.map((e) => e.message) });
   }
 });
 
-userRouter.put("/updatepassword", verifyUser, async (req, res) => {
+userRouter.put('/updatepassword', verifyUser, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
   const { isValid, error } = await validateUpdatePasswordInput(
@@ -99,16 +108,19 @@ userRouter.put("/updatepassword", verifyUser, async (req, res) => {
         if (user) {
           const match = await bcrypt.compare(oldPassword, user.password);
           if (!match) {
-            return res.json({ message: "Please enter correct password !" });
+            return res.json({ message: 'Please enter correct password !' });
           }
           await User.findByIdAndUpdate(id, {
             password: await bcrypt.hash(newPassword, 12),
           });
-          return res.json({ message: "Password updated successfully " });
+          return res.json({ message: 'Password updated successfully ' });
         }
       }
     } catch (error) {
-      return res.json({ message: "Something went wrong !" });
+      return res.json({
+        message: 'Something went wrong !',
+        err: error.message,
+      });
     }
   } else {
     return res.json({ message: error.details.map((e) => e.message) });
