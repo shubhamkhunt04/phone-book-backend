@@ -14,12 +14,16 @@ const userRouter = express.Router();
 
 userRouter.get('/', verifyUser, async (req, res) => {
   try {
-    console.log('id',id)
+    console.log('id', id);
     const user = await User.findById(id);
 
-    res.json({ message: 'User details', payload: user });
+    res.json({ message: 'User details', payload: user, status: 200 });
   } catch (err) {
-    res.json({ message: 'Something went wrong !!', err: error.message });
+    res.json({
+      message: 'Something went wrong !!',
+      err: error.message,
+      status: 400,
+    });
   }
 });
 
@@ -43,15 +47,17 @@ userRouter.post('/register', async (req, res) => {
 
         return res.json({
           payload: { ...user._doc, token },
+          status: 200,
           message: 'User register successfully',
         });
       }
 
-      return res.json({ message: 'User Already Exist' });
+      return res.json({ message: 'User Already Exist', status: 400 });
     } catch (error) {
       return res.json({
         message: 'Something went wrong !',
         err: error.message,
+        status: 400,
       });
     }
   } else {
@@ -79,11 +85,13 @@ userRouter.post('/login', async (req, res) => {
       return res.json({
         payload: { ...user._doc, token },
         message: 'User login successfully',
+        status: 200,
       });
     } catch (error) {
       return res.json({
         message: 'Something went wrong !',
         err: error.message,
+        status: 400,
       });
     }
   } else {
@@ -107,18 +115,25 @@ userRouter.put('/updatepassword', verifyUser, async (req, res) => {
         if (user) {
           const match = await bcrypt.compare(oldPassword, user.password);
           if (!match) {
-            return res.json({ message: 'Please enter correct password !' });
+            return res.json({
+              message: 'Please enter correct password !',
+              status: 400,
+            });
           }
           await User.findByIdAndUpdate(id, {
             password: await bcrypt.hash(newPassword, 12),
           });
-          return res.json({ message: 'Password updated successfully ' });
+          return res.json({
+            message: 'Password updated successfully ',
+            status: 200,
+          });
         }
       }
     } catch (error) {
       return res.json({
         message: 'Something went wrong !',
         err: error.message,
+        status: 400,
       });
     }
   } else {
