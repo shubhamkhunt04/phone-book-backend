@@ -28,7 +28,7 @@ contactRouter.post('/addcontact', verifyUser, async (req, res) => {
         email,
         phone,
         company,
-        userId:user._id
+        userId: user._id,
       });
       // if (user) {
       //   user.userContacts.push(contact.id);
@@ -57,9 +57,9 @@ contactRouter.get(
   async (req, res) => {
     try {
       const { id } = req.decoded;
-      const user = await User.findById(id)
+      const user = await User.findById(id);
       if (user) {
-        const userContacts = await Contact.find({userId:id})
+        const userContacts = await Contact.find({ userId: id });
         return res.json({
           payload: userContacts,
           message: 'User Contacts',
@@ -80,12 +80,16 @@ contactRouter.get('/:contactId', verifyUser, async (req, res) => {
     const contactId = req.params.contactId;
     if (user) {
       // check the contact id is exist in userContacts array
-      const validateUserAccess = user.userContacts.includes(contactId);
-      if (validateUserAccess) {
-        const contact = await Contact.findById(contactId);
+      // const validateUserAccess = user.userContacts.includes(contactId);
+
+      const contact = await Contact.findById(contactId);
+      if (!contact) return res.json({ message: 'Contact not found' });
+
+      // check user is Not allow to fetch contacts
+      if (String(contact.userId) === id) {
         return res.json({ message: 'Contact detail', payload: contact });
       } else {
-        // User is not authorize to fetch this contact
+        // user can not fetch others contacts
         return res.json({
           message: 'Contact not found',
         });
@@ -112,23 +116,31 @@ contactRouter.put('/:contactId', verifyUser, async (req, res) => {
 
       const user = await User.findById(id);
 
-      // Not allow to update other users contact
-      if (!user.userContacts.includes(contactId))
-        return res.json({ message: 'Not allowed to update contact details' });
+      // if (!user.userContacts.includes(contactId))
+      // return res.json({ message: 'Not allowed to update contact details' });
 
-      const contact = await Contact.findById(contactId);
-      if (!contact) return res.json({ message: 'Contact not found' });
+      if (user) {
+        const contact = await Contact.findById(contactId);
+        if (!contact) return res.json({ message: 'Contact not found' });
 
-      const updatedContact = await Contact.findByIdAndUpdate(
-        contactId,
-        {
-          $set: req.body,
-        },
-        { new: true }
-      );
+        // Not allow to update other users contact
+        if (String(contact.userId) !== id)
+          return res.json({ message: 'Not allowed to update contact details' });
 
-      await contact.save();
-      res.json({ message: 'Contact details updated', payload: updatedContact });
+        const updatedContact = await Contact.findByIdAndUpdate(
+          contactId,
+          {
+            $set: req.body,
+          },
+          { new: true }
+        );
+
+        await contact.save();
+        res.json({
+          message: 'Contact details updated',
+          payload: updatedContact,
+        });
+      }
     } catch (error) {
       return res.json({ message: 'Something went wrong', err: error.message });
     }
@@ -144,15 +156,19 @@ contactRouter.delete('/:contactId', verifyUser, async (req, res) => {
     const contactId = req.params.contactId;
     const user = await User.findById(id);
 
-    // Not allow to update other users contact
-    if (!user.userContacts.includes(contactId))
-      return res.json({ message: 'Not allowed to delete contact details' });
+    // if (!user.userContacts.includes(contactId))
+    //   return res.json({ message: 'Not allowed to delete contact details' });
+    if (user) {
+      const contact = await Contact.findById(contactId);
+      if (!contact) return res.json({ message: 'Contact not found' });
 
-    const contact = await Contact.findById(contactId);
-    if (!contact) return res.json({ message: 'Contact not found' });
+      // Not allow to update other users contact
+      if (String(contact.userId) !== id)
+        return res.json({ message: 'Not allowed to update contact details' });
 
-    const deletedContact = await Contact.findByIdAndRemove(contactId);
-    res.json({ message: 'Contact details deleted', payload: deletedContact });
+      const deletedContact = await Contact.findByIdAndRemove(contactId);
+      res.json({ message: 'Contact details deleted', payload: deletedContact });
+    }
   } catch (error) {
     console.log(error);
     return res.json({ message: 'Something went wrong', err: error.message });
