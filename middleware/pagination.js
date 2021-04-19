@@ -1,5 +1,5 @@
 module.exports.paginatedResult = (model, sortFlag = true) => {
-  return async (req, res) => {
+  return async (req, res, next) => {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
 
@@ -38,11 +38,12 @@ module.exports.paginatedResult = (model, sortFlag = true) => {
       }
       // get total documents in the collection
       const count = await model.countDocuments();
-      res.json({
-        results,
-        totalPages: Math.ceil(count / limit),
-        currentPage: page,
-      });
+      // res.json({
+      //   results,
+      //   totalPages: Math.ceil(count / limit),
+      //   currentPage: page,
+      // });
+      next();
     } catch (err) {
       res.json({ message: err.message });
     }

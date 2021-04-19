@@ -28,11 +28,12 @@ contactRouter.post('/addcontact', verifyUser, async (req, res) => {
         email,
         phone,
         company,
+        userId:user._id
       });
-      if (user) {
-        user.userContacts.push(contact.id);
-        await user.save();
-      }
+      // if (user) {
+      //   user.userContacts.push(contact.id);
+      // }
+      await user.save();
       return res.json({
         payload: contact,
         message: 'Contact created successfully',
@@ -52,14 +53,15 @@ contactRouter.post('/addcontact', verifyUser, async (req, res) => {
 contactRouter.get(
   '/contacts',
   verifyUser,
-  paginatedResult(Contact),
+  // paginatedResult(Contact),
   async (req, res) => {
     try {
       const { id } = req.decoded;
-      const user = await User.findById(id).populate('userContacts');
+      const user = await User.findById(id)
       if (user) {
+        const userContacts = await Contact.find({userId:id})
         return res.json({
-          payload: user.userContacts,
+          payload: userContacts,
           message: 'User Contacts',
         });
       }

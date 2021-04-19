@@ -20,12 +20,12 @@ const userSchema = new Schema(
       minlength: 8,
       trim: true,
     },
-    userContacts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Contact",
-      },
-    ],
+    // userContacts: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "Contact",
+    //   },
+    // ],
   },
   {
     timestamps: true,

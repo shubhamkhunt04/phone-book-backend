@@ -61,7 +61,6 @@ userRouter.post('/register', async (req, res) => {
 
 userRouter.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log(email, password);
   const { isValid, error } = await validateLoginInput(email, password);
 
   if (isValid) {
