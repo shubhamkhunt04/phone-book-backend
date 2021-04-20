@@ -6,7 +6,7 @@ const {
   validateContactInput,
   validateContactUpdateInput,
 } = require('../util/validators/contactValidator');
-const { paginatedResult } = require('../middleware/pagination');
+const { recordOptionsHelper } = require('../util/recordOptionsHelper');
 
 const contactRouter = express.Router();
 
@@ -58,13 +58,17 @@ contactRouter.post('/addcontact', verifyUser, async (req, res) => {
 contactRouter.get(
   '/contacts',
   verifyUser,
-  // paginatedResult(Contact),
   async (req, res) => {
+    const { limit, sortOptions } = recordOptionsHelper(req);
+    console.log('limit', limit);
+    console.log('sortOptinonns', sortOptions);
     try {
       const { id } = req.decoded;
       const user = await User.findById(id);
       if (user) {
-        const userContacts = await Contact.find({ userId: id });
+        const userContacts = await Contact.find({ userId: id })
+          .limit(limit)
+          .sort(sortOptions);
         return res.json({
           payload: userContacts,
           message: 'User Contacts',

@@ -2,7 +2,6 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const User = require('../model/User');
 const { generateToken } = require('../util/generateToken');
-const { paginatedResult } = require('../middleware/pagination');
 const {
   validateRegisterInput,
   validateLoginInput,
